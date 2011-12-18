@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<application xmlns="http://ns.adobe.com/air/application/3.0"> 
+	<id>com.mudchobo.air.simplefileserver</id> 
+	<versionNumber>1.0</versionNumber> 
+	<filename>SimpleFileServer</filename> 
+	<name>mudchobo</name> 
+     <description>
+        <text xml:lang="kr">초간단 파일 서버.</text> 
+        <text xml:lang="en">simple file server.</text> 
+    </description>
+    <copyright>mudchobo</copyright> 
+    <initialWindow>
+        <content>index.html</content> 
+        <title>Simple File Server</title>
+        <visible>true</visible>
+        <width>400</width>
+        <height>400</height>
+    </initialWindow>
+    <!--  
+    <icon>
+        <image16x16>icons/smallIcon.png</image16x16> 
+        <image32x32>icons/mediumIcon.png</image32x32> 
+        <image48x48>icons/bigIcon.png</image48x48> 
+        <image128x128>icons/biggerIcon.png</image128x128>  
+    </icon> 
+    -->
+</application>

@@ -1,0 +1,100 @@
+<html> 
+    <head> 
+        <title>Simple File Server</title> 
+        <link rel="stylesheet" type="text/css" href="/css/main.css" />
+        <script type="text/javascript" src="/js/lib/AIRAliases.js"></script>
+        <script type="text/javascript" src="/js/lib/AIRIntrospector.js"></script>
+        <script type="text/javascript" src="/js/lib/jquery-1.7.1.min.js"></script>
+        <script type="text/javascript">
+        
+        	// 기본값 지정
+        	var port = 50000;
+        	var shareFolder = air.File.documentsDirectory;
+        	var serverSocket;
+        	var isStart = false;
+			$(document).ready(function(){
+				$("#inputPort").val(port);
+				$("#inputShareFolder").val(shareFolder.nativePath);
+				shareFolder.addEventListener(air.Event.SELECT, selectShareFolderHandler);
+				$("#btnStart").click(function(){
+					if (!isStart){
+						try{
+							serverSocket = new air.ServerSocket();
+							serverSocket.addEventListener(air.Event.CONNECT, connectSocketHandler);
+							serverSocket.bind($("#inputPort").val());
+							serverSocket.listen();
+							isStart = true;
+							$(this).attr("value", "중지");
+						} catch(e){
+							alert("에러! = " + e.message);
+						}
+					} else {
+						serverSocket.removeEventListener(air.Event.CONNECT, connectSocketHandler);
+						serverSocket.close();
+						isStart = false;
+						$(this).attr("value", "시작");
+					}
+				});
+				$("#btnBrowser").click(function(){
+					shareFolder.browseForDirectory("폴더를 선택하세요.");
+				});
+			});
+			
+			function selectShareFolderHandler(e){
+				$("#inputShareFolder").val(shareFolder.nativePath);
+			}
+			
+			function connectSocketHandler(e){
+				var socket = e.socket;
+				socket.addEventListener(air.ProgressEvent.SOCKET_DATA, proressSocketHandler);
+			}
+			
+			function proressSocketHandler(e){
+				var socket = e.target;
+				var bytes = new air.ByteArray();
+				socket.readBytes(bytes);
+				var request = "" +bytes;
+				air.Introspector.Console.log("request = " + bytes);
+				var path = request.substring(5, request.indexOf("HTTP/") - 1);
+				air.Introspector.Console.log("path = " + path);
+				var file = shareFolder.resolvePath(path);
+				air.Introspector.Console.log(file.nativePath);
+				air.Introspector.Console.log(file.exists);
+				if (file.isDirectory){
+					socket.writeUTFBytes("HTTP/1.1 200 OK\n");
+					socket.writeUTFBytes("<html><body><ul></ul></body></html>");
+				}
+				else if (file.exists && !file.isDirectory){
+					var stream = new air.FileStream();
+					stream.open(file, air.FileMode.READ);
+					var content = new air.ByteArray();
+					stream.readBytes(content);
+					stream.close();
+					socket.writeUTFBytes("HTTP/1.1 200 OK\n");
+					socket.writeUTFBytes("Content-Disposition: attachment;filename=" + path + "\n");
+					socket.writeUTFBytes("Content-Length: " + file.size + "\n");
+					socket.writeUTFBytes("\n");
+					socket.writeBytes(content);
+				} else {
+					socket.writeUTFBytes("HTTP/1.1 404 Not Found\n");
+					socket.writeUTFBytes("Content-Type: text/html\n\n");
+					socket.writeUTFBytes("<html><body><h2>Page Not Found</h2></body></html>");
+				}
+				socket.flush();
+				socket.close();
+			}
+			
+			function log(s){
+				$("#divStatus").prepend("<div>" + s + "</div>");
+			}
+        </script> 
+    </head> 
+    <body>
+    	포트 : <input type="text" id="inputPort" /><br />
+    	공유폴더 : <input type="text" id="inputShareFolder" disabled="true"/>
+    	<input type="button" id="btnBrowser" value="폴더선택"/><br />
+    	<input type="button" id="btnStart" value="시작"/>
+    	<div class="divStatus">
+    	</div>
+    </body>
+</html>
