@@ -82,12 +82,13 @@
 				}
 				socket.flush();
 				socket.close();
+				log(file.nativePath);
 			}
 			
 			function log(s){
-				$("#divStatus").prepend("<div>" + s + "</div>");
+				$(".divStatus").prepend("<div>" + s + "</div>");
 			}
-        </script> 
+        </script>
     </head> 
     <body>
     	포트 : <input type="text" id="inputPort" /><br />
